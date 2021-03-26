@@ -3,47 +3,44 @@
 //  weatherApp
 //
 //  Created by Philip Loeffler on 3/25/21.
-//
+// state = you do not directly update the ui, you tell some source of truth some peice of data, which in
+ // this case is the boolean "isNight" so we set up our app to handle if "isNight" is true or false.
+// the ui is waiting for this change, and when it happens the ui is watching this source of truth, and when it happens your ui reacts to it. this is declarative programming
 
 import SwiftUI
 
 struct ContentView: View {
+    
+    
+    @State private var isNight = false
+    
     var body: some View {
         ZStack {
-            BackgroundView(topColor: .blue, bottomColor: .white)
+            //background view takes in a variable named, isNight. we Pass it the state ?isNight from parents,
+            //will update according to the parent
+            BackgroundView(isNight: $isNight)
             VStack {
               CityTextView(cityName: "Cupertino, CA")
                 
-             MainWeatherStatusView(imageName: "cloud.sun.fill", temperature: 74)
+                MainWeatherStatusView(imageName: isNight ? "moon.stars.fill" : "cloud.sun.fill", temperature: 74)
              
                 HStack(spacing: 20) {
-                   WeatherDayView(dayOfWeek: "TUE",
-                                  imageName: "cloud.sun.fill",
-                                  temperature: 74)
-                    WeatherDayView(dayOfWeek: "WED",
-                                   imageName: "sun.max.fill",
-                                   temperature: 88)
-                    WeatherDayView(dayOfWeek: "ThU",
-                                   imageName: "wind.snow",
-                                   temperature: 55)
-                    WeatherDayView(dayOfWeek: "FRI",
-                                   imageName: "sunset.fill",
-                                   temperature: 60)
-                    WeatherDayView(dayOfWeek: "SAT",
-                                   imageName: "snow",
-                                   temperature: 25)
-               
+                    ForEach(WeatherDayData) { weather in
+                        WeatherDayView(dayOfWeek: weather.dayOfWeek,
+                                       imageName: weather.imageName,
+                                       temperature: weather.temperature
+                                       
+                        )
+                                }
+                
                 }
                 Spacer()
-                
+                //toggle is changing the isnight boolean
+                //it is a control that toggles between on and off states
                 Button {
-                    print("tapped")
+                    isNight.toggle()
                 } label: {
-                    Text("Change day time")
-                        .frame(width: 280, height: 50)
-                        .background(Color.white)
-                        .font(.system(size: 20, weight: .bold, design: .default))
-                        .cornerRadius(10)
+                    WeatherButton(title: "Change Day Time", textColor: .blue, backgroundColor: .white)
                 }
                 Spacer()
             }
@@ -78,10 +75,13 @@ struct WeatherDayView : View {
 }
 
 struct BackgroundView: View {
-    var topColor: Color
-    var bottomColor: Color
+    //so this view is a child of the structContent view. So we are passing the isNight variable down the
+    //heirarchy to the childen.
+    //the binding on the variable means that its always going to be the same as the state variable up top
+    @Binding var isNight: Bool
+ 
     var body: some View {
-        LinearGradient(gradient: Gradient(colors: [topColor, bottomColor]),
+        LinearGradient(gradient: Gradient(colors: [isNight ? .black : .blue, isNight ? .gray : .white]),
         startPoint: .topLeading,
         endPoint: .bottomTrailing)
         .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
@@ -103,7 +103,7 @@ struct MainWeatherStatusView: View {
     var temperature: Int
     var body: some View {
         VStack(spacing: 8){
-            Image(imageName)
+            Image(systemName: imageName)
                 .renderingMode(.original)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -116,18 +116,7 @@ struct MainWeatherStatusView: View {
     }
 }
 
-struct WeatherButton: View {
-    var title: String
-    var textColor: Color
-    var backgroundColor: Color
-    var body: some View {
-        Text(title)
-            .frame(width: 280, height: 50)
-            .background(Color.white)
-            .font(.system(size: 20, weight: .bold, design: .default))
-            .cornerRadius(10)
-    }
-}
+
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
